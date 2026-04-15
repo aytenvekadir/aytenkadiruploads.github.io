@@ -113,9 +113,15 @@ async function upload() {
         return;
     }
 
-    const folder = name ? name : "misafirler";
-    const path = "/" + folder + "/" + file.name;
+   let fileName = file.name;
 
+if (name) {
+    const safeName = name.replace(/[^a-zA-Z0-9]/g, "_");
+    fileName = safeName + "_" + file.name;
+}
+
+const path = "/" + fileName;
+    
     const progressContainer = document.getElementById("progressContainer");
     const progressBar = document.getElementById("progressBar");
     const status = document.getElementById("status");
