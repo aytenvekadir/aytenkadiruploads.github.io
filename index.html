@@ -96,8 +96,10 @@ button:hover {
     <button onclick="upload()">Yükle</button>
 
     <div class="progress-container" id="progressContainer">
-        <div class="progress-bar" id="progressBar"></div>
+    <div class="progress-bar" id="progressBar"></div>
     </div>
+
+<div class="status" id="status"></div>
 
     <div class="status" id="status"></div>
 </div>
@@ -108,15 +110,24 @@ async function upload() {
   const nameInput = document.getElementById("nameInput");
 
   const files = fileInput.files;
-  const name = nameInput.value;
+  const name = nameInput.value.trim();
 
   if (!files.length) {
     alert("Dosya seç!");
     return;
   }
 
+  const progressContainer = document.getElementById("progressContainer");
+  const progressBar = document.getElementById("progressBar");
+  const status = document.getElementById("status");
+
+  progressContainer.style.display = "block";
+  progressBar.style.width = "0%";
+
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
+
+    status.innerText = "Yükleniyor " + (i+1) + "/" + files.length;
 
     const base64 = await toBase64(file);
 
@@ -130,12 +141,16 @@ async function upload() {
         name: name
       })
     });
+
+    const percent = Math.round(((i + 1) / files.length) * 100);
+    progressBar.style.width = percent + "%";
   }
 
-  alert("Tüm fotoğraflar yüklendi 🎉");
+  status.innerText = "Bitti 🎉";
 }
+</script>
 
-// yardımcı fonksiyon
+    <script>
 function toBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
