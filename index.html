@@ -1,40 +1,160 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Fotoğraf Yükle</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    background: linear-gradient(to bottom, #fdfaf6, #fff1e6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Kart */
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Başlık */
+h2 {
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 10px;
+}
+
+/* Inputlar */
+input[type="file"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+}
+
+/* Buton */
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: #e8d8c3;
+    border-radius: 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #f7e6d0;
+}
+
+/* Progress bar */
+.progress-container {
+    margin-top: 15px;
+    background: #eee;
+    border-radius: 10px;
+    overflow: hidden;
+    display: none;
+}
+
+.progress-bar {
+    height: 10px;
+    width: 0%;
+    background: #e8d8c3;
+    transition: width 0.3s;
+}
+
+.status {
+    margin-top: 10px;
+    font-size: 14px;
+}
+</style>
+</head>
+
 <body>
 
-<h2>Dosya Yükle</h2>
-<input type="file" id="fileInput">
-<button onclick="upload()">Yükle</button>
+<div class="container">
+    <h2>Anılarınızı Paylaşın 💕</h2>
+    <p>Çektiğiniz fotoğrafları bizimle paylaşabilirsiniz</p>
+
+    <input type="text" id="nameInput" placeholder="İsminiz (opsiyonel)">
+    <input type="file" id="fileInput">
+
+    <button onclick="upload()">Yükle</button>
+
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="status" id="status"></div>
+</div>
 
 <script>
 async function upload() {
-  const file = document.getElementById("fileInput").files[0];
+    const file = document.getElementById("fileInput").files[0];
+    const name = document.getElementById("nameInput").value.trim();
 
-  if (!file) {
-    alert("Dosya seç!");
-    return;
-  }
+    if (!file) {
+        document.getElementById("status").innerText = "Lütfen dosya seç";
+        return;
+    }
 
-  const response = await fetch("https://content.dropboxapi.com/2/files/upload", {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer sl.u.AGYQ26Vc5ZMkihZg6QhnPGQopt0IloKtbgVoIMNcjNtKO9X3a7PTZXOCgosFsrMX5TDwtY7qMF7PtKfTsGTXRcF51VsNbaw2EiG5CIibq1iZfu7_2Q5wi4eEmJt_Qy6B3AuvLBjkxBH0pb7wt7SDIWcVEO2ggwpEAes6TnVqkxoJ7ro6n4fh8aiFTbno83qkLyTU-Xm5qKYKU2cdrFOweO4Xqd1Rkr9ZfLk2NDPgSmJnp2XeschfgEpj2skZUtCfLQoD-UdeEg-FWHCXfn0KxFb6mLeEIc-8ITtcBmppRv4uBmVnOkWiA2qXQUegfaTYGRKaYYKfQ2_gG2IgR6QWlzv4WfrREzVu8DZLHXCuCuOY-xxjjZFBJFzZAqPZefVhJ0B2d9KNIgTbbX3ADQyUziT2iRW7aRAng3FZ15OKUiWPOzpApCL6dzVKDMocZRbby3CnLNPaQNF6x-5X-EfETLuvxNJjxYsZxLWZfzaZt-6TUtNdvs836sDjOYjVS-lRaNdVTuJo_tO3abFs1MEaJKEODwIE2QcFXPCDHoUM5X54RIHknpdoXkocr7nteKcbAsxu_xmpjOvQfxk7LSFJDOy130BhJo-ZgDt_EB6qdRK4aYYRHzho9gSIxM7HUYwklo8joVhVKkTJxUYsUy9sRgh7Eit2Pm3yySei4IwCWkeCmaT_LIf7NbnOjxJ23Gr48trPavpSoFZjqosVOzN_ZJxtXM0_aB4CVYeZ7E534tiHeWPGmmVfIwBfN9EyV3nzgUTLl9j3EEmxWM5qmjQe2I2-uqo9cPZZGmCqvwfDZ5uSayTfUu2a0qSsG_XEWHDyfWveiDmZq9Q_hYRvg_whquN-DpJOwTLxlovWRNIU1K2ZAK5FnO0M9GBZcw2iTj07DbrPO9blwCHRZ5aTq67YLXQsOdeyxLOPZm7mtcIYqhWcvrqgReqEprTv16NO8Bg-75dhxfDGR0pkUya2iZOau6JTDumb4jTNW4L3eZER51DKhcUBOw6oN2XsNKMy_Dtl981ICdXMZAJ1AbU7aBR5lGr7aNpE1uXxIGXfPWNFAMP1BnolTUOXRu_WSpgXXp5lLIa6I3QpSzRUEOKvx4cOKiwto_qXEVyYmF37Zadn3EqhN4_LzAyKHqAymFOhWvwX_y1htMZg3IL3AjssL-IvVgno6_a1sgo5E-02OUVl9fvoSn4FpLWJaW3iNj_iZLDRzHkc6wkWunMzdYZ5dJr6e2nQOyg2xYlkHz_VzYiKm0cTUV0-WKnFuS46vl0w9giPAFGFQ16MTKXeQo1jX4pXuE8RtaRLv2eX_1CCj36Eaq2CX0Qp8Vb_cGoFY6OoRtLItG9aFd9Oe_YdeLd0gGqSuC0q0CIfM8UA3ghLxnqEGthLlJIndgBAezJSe37-5Db5OPCR-D3zmTUQ1RYVzF7_HxgKUuwskVXyEmOFfp2z7Vy7KA",
-      "Dropbox-API-Arg": JSON.stringify({
-        path: "/" + file.name,
+    const folder = name ? name : "misafirler";
+    const path = "/" + folder + "/" + file.name;
+
+    const progressContainer = document.getElementById("progressContainer");
+    const progressBar = document.getElementById("progressBar");
+    const status = document.getElementById("status");
+
+    progressContainer.style.display = "block";
+    progressBar.style.width = "0%";
+    status.innerText = "Yükleniyor...";
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "https://content.dropboxapi.com/2/files/upload");
+
+    xhr.setRequestHeader("Authorization", "Bearer sl.u.AGYQ26Vc5ZMkihZg6QhnPGQopt0IloKtbgVoIMNcjNtKO9X3a7PTZXOCgosFsrMX5TDwtY7qMF7PtKfTsGTXRcF51VsNbaw2EiG5CIibq1iZfu7_2Q5wi4eEmJt_Qy6B3AuvLBjkxBH0pb7wt7SDIWcVEO2ggwpEAes6TnVqkxoJ7ro6n4fh8aiFTbno83qkLyTU-Xm5qKYKU2cdrFOweO4Xqd1Rkr9ZfLk2NDPgSmJnp2XeschfgEpj2skZUtCfLQoD-UdeEg-FWHCXfn0KxFb6mLeEIc-8ITtcBmppRv4uBmVnOkWiA2qXQUegfaTYGRKaYYKfQ2_gG2IgR6QWlzv4WfrREzVu8DZLHXCuCuOY-xxjjZFBJFzZAqPZefVhJ0B2d9KNIgTbbX3ADQyUziT2iRW7aRAng3FZ15OKUiWPOzpApCL6dzVKDMocZRbby3CnLNPaQNF6x-5X-EfETLuvxNJjxYsZxLWZfzaZt-6TUtNdvs836sDjOYjVS-lRaNdVTuJo_tO3abFs1MEaJKEODwIE2QcFXPCDHoUM5X54RIHknpdoXkocr7nteKcbAsxu_xmpjOvQfxk7LSFJDOy130BhJo-ZgDt_EB6qdRK4aYYRHzho9gSIxM7HUYwklo8joVhVKkTJxUYsUy9sRgh7Eit2Pm3yySei4IwCWkeCmaT_LIf7NbnOjxJ23Gr48trPavpSoFZjqosVOzN_ZJxtXM0_aB4CVYeZ7E534tiHeWPGmmVfIwBfN9EyV3nzgUTLl9j3EEmxWM5qmjQe2I2-uqo9cPZZGmCqvwfDZ5uSayTfUu2a0qSsG_XEWHDyfWveiDmZq9Q_hYRvg_whquN-DpJOwTLxlovWRNIU1K2ZAK5FnO0M9GBZcw2iTj07DbrPO9blwCHRZ5aTq67YLXQsOdeyxLOPZm7mtcIYqhWcvrqgReqEprTv16NO8Bg-75dhxfDGR0pkUya2iZOau6JTDumb4jTNW4L3eZER51DKhcUBOw6oN2XsNKMy_Dtl981ICdXMZAJ1AbU7aBR5lGr7aNpE1uXxIGXfPWNFAMP1BnolTUOXRu_WSpgXXp5lLIa6I3QpSzRUEOKvx4cOKiwto_qXEVyYmF37Zadn3EqhN4_LzAyKHqAymFOhWvwX_y1htMZg3IL3AjssL-IvVgno6_a1sgo5E-02OUVl9fvoSn4FpLWJaW3iNj_iZLDRzHkc6wkWunMzdYZ5dJr6e2nQOyg2xYlkHz_VzYiKm0cTUV0-WKnFuS46vl0w9giPAFGFQ16MTKXeQo1jX4pXuE8RtaRLv2eX_1CCj36Eaq2CX0Qp8Vb_cGoFY6OoRtLItG9aFd9Oe_YdeLd0gGqSuC0q0CIfM8UA3ghLxnqEGthLlJIndgBAezJSe37-5Db5OPCR-D3zmTUQ1RYVzF7_HxgKUuwskVXyEmOFfp2z7Vy7KA");
+    xhr.setRequestHeader("Dropbox-API-Arg", JSON.stringify({
+        path: path,
         mode: "add",
         autorename: true
-      }),
-      "Content-Type": "application/octet-stream"
-    },
-    body: file
-  });
+    }));
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
 
-  if (response.ok) {
-    alert("Yüklendi ✅");
-  } else {
-    const err = await response.text();
-    alert("Hata: " + err);
-  }
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percent = (e.loaded / e.total) * 100;
+            progressBar.style.width = percent + "%";
+        }
+    };
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            status.innerText = "Yüklendi 💖";
+        } else {
+            status.innerText = "Hata oluştu 😢";
+        }
+    };
+
+    xhr.onerror = function() {
+        status.innerText = "Bağlantı hatası";
+    };
+
+    xhr.send(file);
 }
 </script>
 
