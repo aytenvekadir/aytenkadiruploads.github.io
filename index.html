@@ -92,7 +92,7 @@ button:hover {
     <p>Çektiğiniz fotoğrafları bizimle paylaşabilirsiniz</p>
 
     <input type="text" id="nameInput" placeholder="İsminiz (opsiyonel)">
-    <input type="file" id="fileInput" multiple>
+    <input type="file" id="fileInput" multiple accept="image/*,video/*">
     <button onclick="upload()">Yükle</button>
 
     <div class="progress-container" id="progressContainer">
@@ -122,41 +122,52 @@ async function upload() {
   progressContainer.style.display = "block";
   progressBar.style.width = "0%";
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
+for (let i = 0; i < files.length; i++) {
+  const file = files[i];
 
-    status.innerText = "Yükleniyor " + (i+1) + "/" + files.length;
+  let type = "";
 
-    try {
-      const base64 = await toBase64(file);
+  if (file.type.startsWith("image/")) {
+    type = "images";
+  } else if (file.type.startsWith("video/")) {
+    type = "videos";
+  } else {
+    status.innerText = "Desteklenmeyen dosya ❌";
+    continue;
+  }
 
-      const res = await fetch("https://backend-clean-six.vercel.app/api/upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          file: base64.split(",")[1],
-          name: name
-        })
-      });
+  status.innerText = "Yükleniyor " + (i+1) + "/" + files.length;
 
-      if (!res.ok) {
-        const err = await res.text();
-        console.log(err);
-        status.innerText = "Hata oluştu ❌";
-        return;
-      }
+  try {
+    const base64 = await toBase64(file);
 
-    } catch (e) {
-      console.log(e);
-      status.innerText = "Upload hatası ❌";
+    const res = await fetch("https://backend-clean-six.vercel.app/api/upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        file: base64.split(",")[1],
+        name: name,
+        type: type,
+        filename: file.name
+      })
+    });
+
+    if (!res.ok) {
+      status.innerText = "Hata oluştu ❌";
       return;
     }
 
-    const percent = Math.round(((i + 1) / files.length) * 100);
-    progressBar.style.width = percent + "%";
+  } catch (e) {
+    console.log(e);
+    status.innerText = "Upload hatası ❌";
+    return;
   }
+
+  const percent = Math.round(((i + 1) / files.length) * 100);
+  progressBar.style.width = percent + "%";
+}
 
   status.innerText = "Bitti 🎉";
 }
