@@ -18,6 +18,7 @@ body {
     align-items: center;
     height: 100vh;
 }
+
 .container {
     background: white;
     padding: 30px;
@@ -27,9 +28,11 @@ body {
     text-align: center;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
+
 h2 {
     font-family: 'Playfair Display', serif;
 }
+
 input {
     width: 100%;
     padding: 12px;
@@ -37,6 +40,7 @@ input {
     border-radius: 12px;
     border: 1px solid #ddd;
 }
+
 button {
     width: 100%;
     padding: 12px;
@@ -45,44 +49,51 @@ button {
     border-radius: 20px;
     cursor: pointer;
 }
+
 .progress-container {
-    margin-top: 15px;
+    margin-top: 20px;
     background: #eee;
     border-radius: 10px;
     overflow: hidden;
 }
+
 .progress-bar {
     height: 10px;
     width: 0%;
     background: #e8d8c3;
+    transition: width 0.3s;
 }
+
 .status {
-    margin-top: 10px;
+    margin-top: 15px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="container" id="container">
+
     <h2>Anılarınızı Paylaşın 💕</h2>
 
-    <input type="text" id="nameInput" placeholder="İsminiz (opsiyonel)">
-    <input type="file" id="fileInput" multiple accept="image/*,video/*">
+    <div id="formArea">
+        <input type="text" id="nameInput" placeholder="İsminiz (opsiyonel)">
+        <input type="file" id="fileInput" multiple accept="image/*,video/*">
+        <button onclick="upload()">Yükle</button>
+    </div>
 
-    <button onclick="upload()">Yükle</button>
-
-    <div class="progress-container">
+    <div class="progress-container" id="progressContainer" style="display:none;">
         <div class="progress-bar" id="progressBar"></div>
     </div>
 
     <div class="status" id="status"></div>
+
 </div>
 
 <script>
 let cachedToken = null;
 
-// 🔑 backend'den token al
+// 🔑 token al
 async function getAccessToken() {
     if (cachedToken) return cachedToken;
 
@@ -103,8 +114,14 @@ async function upload() {
         return;
     }
 
+    const formArea = document.getElementById("formArea");
+    const progressContainer = document.getElementById("progressContainer");
     const progressBar = document.getElementById("progressBar");
     const status = document.getElementById("status");
+
+    // 🎯 formu gizle
+    formArea.style.display = "none";
+    progressContainer.style.display = "block";
 
     const ACCESS_TOKEN = await getAccessToken();
 
@@ -126,10 +143,14 @@ async function upload() {
         progressBar.style.width = percent + "%";
     }
 
-    status.innerText = "Bitti 🎉";
+    // 🎉 bitiş ekranı
+    document.getElementById("container").innerHTML = `
+        <h2>Teşekkürler 💕</h2>
+        <p>Tüm anılar başarıyla yüklendi 🎉</p>
+    `;
 }
 
-// 📤 Dropbox upload
+// 📤 upload
 function uploadFile(file, path, token) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
