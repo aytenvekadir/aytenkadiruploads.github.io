@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fotoğraf Yükle</title>
+<title>Fotoğraf & Video Yükle</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
 
@@ -18,8 +18,6 @@ body {
     align-items: center;
     height: 100vh;
 }
-
-/* Kart */
 .container {
     background: white;
     padding: 30px;
@@ -29,58 +27,37 @@ body {
     text-align: center;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
-
-/* Başlık */
 h2 {
     font-family: 'Playfair Display', serif;
-    margin-bottom: 10px;
 }
-
-/* Inputlar */
-input[type="file"],
-input[type="text"] {
+input {
     width: 100%;
     padding: 12px;
     margin: 10px 0;
     border-radius: 12px;
     border: 1px solid #ddd;
 }
-
-/* Buton */
 button {
     width: 100%;
     padding: 12px;
     border: none;
     background: #e8d8c3;
     border-radius: 20px;
-    font-size: 16px;
     cursor: pointer;
-    transition: 0.3s;
 }
-
-button:hover {
-    background: #f7e6d0;
-}
-
-/* Progress bar */
 .progress-container {
     margin-top: 15px;
     background: #eee;
     border-radius: 10px;
     overflow: hidden;
-    display: none;
 }
-
 .progress-bar {
     height: 10px;
     width: 0%;
     background: #e8d8c3;
-    transition: width 0.3s;
 }
-
 .status {
     margin-top: 10px;
-    font-size: 14px;
 }
 </style>
 </head>
@@ -89,95 +66,104 @@ button:hover {
 
 <div class="container">
     <h2>Anılarınızı Paylaşın 💕</h2>
-    <p>Çektiğiniz fotoğrafları bizimle paylaşabilirsiniz</p>
 
     <input type="text" id="nameInput" placeholder="İsminiz (opsiyonel)">
     <input type="file" id="fileInput" multiple accept="image/*,video/*">
+
     <button onclick="upload()">Yükle</button>
 
-    <div class="progress-container" id="progressContainer">
-    <div class="progress-bar" id="progressBar"></div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
     </div>
 
-<div class="status" id="status"></div>
+    <div class="status" id="status"></div>
 </div>
 
 <script>
-async function upload() {
-  const fileInput = document.getElementById("fileInput");
-  const nameInput = document.getElementById("nameInput");
+let cachedToken = null;
 
-  const files = fileInput.files;
-  const name = nameInput.value.trim();
+// 🔑 backend'den token al
+async function getAccessToken() {
+    if (cachedToken) return cachedToken;
 
-  if (!files.length) {
-    alert("Dosya seç!");
-    return;
-  }
+    const res = await fetch("https://backend-clean-six.vercel.app/api/token");
+    const data = await res.json();
 
-  const progressContainer = document.getElementById("progressContainer");
-  const progressBar = document.getElementById("progressBar");
-  const status = document.getElementById("status");
-
-  progressContainer.style.display = "block";
-  progressBar.style.width = "0%";
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-
-    // boyut limiti (opsiyonel ama önerilir)
-    if (file.size > 50 * 1024 * 1024) {
-      status.innerText = "Dosya çok büyük ❌";
-      continue;
-    }
-
-    let type = "images";
-    if (file.type.startsWith("video/")) {
-      type = "videos";
-    }
-
-    status.innerText = "Yükleniyor " + (i+1) + "/" + files.length;
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("name", name);
-      formData.append("type", type);
-
-      const res = await fetch("https://backend-clean-six.vercel.app/api/upload", {
-        method: "POST",
-        body: formData
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        console.log(err);
-        status.innerText = "Upload hatası ❌";
-        return;
-      }
-
-    } catch (e) {
-      console.log(e);
-      status.innerText = "Upload hatası ❌";
-      return;
-    }
-
-    const percent = Math.round(((i + 1) / files.length) * 100);
-    progressBar.style.width = percent + "%";
-  }
-
-  status.innerText = "Bitti 🎉";
+    cachedToken = data.access_token;
+    return cachedToken;
 }
-</script>
 
-    <script>
-function toBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
+// 🚀 upload
+async function upload() {
+    const files = document.getElementById("fileInput").files;
+    const name = document.getElementById("nameInput").value || "misafir";
+
+    if (!files.length) {
+        alert("Dosya seç!");
+        return;
+    }
+
+    const progressBar = document.getElementById("progressBar");
+    const status = document.getElementById("status");
+
+    const ACCESS_TOKEN = await getAccessToken();
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        status.innerText = `Yükleniyor ${i+1}/${files.length}`;
+
+        let folder = "images";
+        if (file.type.startsWith("video/")) {
+            folder = "videos";
+        }
+
+        const path = `/${folder}/${name}/${Date.now()}-${file.name}`;
+
+        await uploadFile(file, path, ACCESS_TOKEN);
+
+        const percent = Math.round(((i + 1) / files.length) * 100);
+        progressBar.style.width = percent + "%";
+    }
+
+    status.innerText = "Bitti 🎉";
+}
+
+// 📤 Dropbox upload
+function uploadFile(file, path, token) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.open("POST", "https://content.dropboxapi.com/2/files/upload");
+
+        xhr.setRequestHeader("Authorization", "Bearer " + token);
+        xhr.setRequestHeader("Dropbox-API-Arg", JSON.stringify({
+            path: path,
+            mode: "add",
+            autorename: true
+        }));
+        xhr.setRequestHeader("Content-Type", "application/octet-stream");
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                document.getElementById("progressBar").style.width = percent + "%";
+            }
+        };
+
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                resolve();
+            } else {
+                console.log(xhr.responseText);
+                reject();
+            }
+        };
+
+        xhr.onerror = () => reject();
+
+        xhr.send(file);
+    });
 }
 </script>
 
